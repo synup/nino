@@ -56,7 +56,7 @@ function nino_version() {
 function build_command() {
   local aws_profile=$1
   eval $(docker-machine env default)
-  docker build -t $(full_repo_name $aws_profile) .
+  docker build -t $(full_repo_name $aws_profile) -f $dockerfile_path .
 }
 
 

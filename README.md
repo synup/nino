@@ -9,11 +9,16 @@ Simplifies collaboration for AWS ECR. Also a better CLI for AWS ECR.
 
 ### Config
 
-Set the `repo_name` in a `.ninorc` file in the project directory. Names of repositories created will be prefixed with the AWS profile name used. Here's a simple config:
+Set `repo_name` and `dockerfile_path` in `.ninorc` file in the project directory. Names of repositories created will be prefixed with the AWS profile name used. Here's a simple config:
 
 ```
 repo_name=hello-world
+
+# set it to whatever suits you
+dockerfile_path=./aws/Dockerfile
 ```
+
+The config file is a bash script. So feel free to use anything bash-friendly.
 
 ### Usage
 
