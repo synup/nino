@@ -1,8 +1,11 @@
 # nino
 
-Simplifies collaboration and a better CLI for AWS ECR. Repository names are also namespaced appropriately.
+Simplifies collaboration and a better CLI for AWS ECR.
 
-Requiring everyone on team to learn and run docker & mile-lengthy AWS commands just to push image updates is mundane.
+* Repository names are namespaced appropriately.
+* Does *not* require everyone on team to learn mile-lengthy commands.
+
+Here's a simple workflow:
 
 * Edit your `Dockerfile`
 * `nino build <aws-profile>` will build the image using docker
