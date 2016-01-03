@@ -1,6 +1,6 @@
 # nino
 
-Simplifies collaboration for AWS ECR. Also a better CLI for AWS ECR.
+Simplifies collaboration and a better CLI for AWS ECR.
 
 ### Requirements
 
