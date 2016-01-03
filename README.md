@@ -2,6 +2,11 @@
 
 Simplifies collaboration and a better CLI for AWS ECR.
 
+Requiring everyone on team to learn docker & lengthy AWS commands just to push image updates is mundane. Just edit your `dockerfile`. Then,
+
+* `nino build <aws-profile>` will build the image using docker
+* `nino tag <aws-profile> latest` will tag the image with `latest` and push it to ECR.
+
 ### Requirements
 
 * docker
