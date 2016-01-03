@@ -1,0 +1,176 @@
+#!/usr/bin/env bash
+
+function import_config() {
+  local config_file="./.ninorc"
+  source $config_file
+}
+
+function help_command() {
+  echo "
+  To use nino, add a .ninorc file to project directory with 'repo_name' set.
+    repo_name='hello-world'
+
+  AVAILABLE COMMANDS
+  -------------------
+
+  Both tag:add and tag:push
+    tag <aws-profile> <tag>
+
+  Add tag to a build
+    tag:add <aws-profile> <tag>
+
+  Pushed tag added
+    tag:push <aws-profile> <tag>
+
+  Build image
+    build <aws-profile>
+
+  URL to the latest image in the repo
+    repo:image <aws-profile>
+
+  AWS ECR repo info
+    repo:info <aws-profile>
+
+  Create an ECR repository
+    repo:create <aws-profile>
+
+  Delete the ECR repository
+    repo:delete <aws-profile>
+
+  Display ECR repo host url
+    repo:host
+  "
+}
+
+
+function login_command() {
+  eval $(aws ecr get-login)
+}
+
+
+function nino_version() {
+  echo "0.0.1"
+}
+
+
+function build_command() {
+  local aws_profile=$1
+  eval $(docker-machine env default)
+  docker build -t $(full_repo_name $aws_profile) .
+}
+
+
+function tag_command() {
+  tag_add_command $1 $2
+  tag_push_command $1 $2
+}
+
+
+function tag_add_command() {
+  local aws_profile=$1
+  local tag_name=$2
+  local repo_host=$(repo_host_command $aws_profile)
+  local full_repo_name=$(full_repo_name $aws_profile)
+  eval $(docker-machine env default)
+
+  docker tag ${full_repo_name}:${tag_name} ${repo_host}/${full_repo_name}:${tag_name}
+}
+
+
+function tag_push_command() {
+  local aws_profile=$1
+  local tag_name=$2
+  local repo_host=$(repo_host_command $aws_profile)
+  local full_repo_name=$(full_repo_name $aws_profile)
+  eval $(docker-machine env default)
+
+  docker push ${repo_host}/${full_repo_name}:${tag_name}
+}
+
+function repo_create_command() {
+  local aws_profile=$1
+  local full_repo_name=$(full_repo_name $aws_profile)
+  aws ecr create-repository --repository-name $full_repo_name --profile $aws_profile
+}
+
+
+function repo_delete_command() {
+  local aws_profile=$1
+  local full_repo_name=$(full_repo_name $aws_profile)
+  aws ecr delete-repository --repository-name $full_repo_name --profile $aws_profile
+}
+
+
+function repo_info_command() {
+  local aws_profile=$1
+  local full_repo_name=$(full_repo_name $aws_profile)
+  aws ecr describe-repositories --repository-name $full_repo_name --profile $aws_profile
+}
+
+
+function repo_image_command() {
+  local aws_profile=$1
+  local tag_name="latest"
+  local repo_host=$(repo_host_command $aws_profile)
+  local full_repo_name=$(full_repo_name $aws_profile)
+
+  echo ${repo_host}/${full_repo_name}:${tag_name}
+}
+
+
+function repo_host_command() {
+  local aws_profile=$1
+  aws ecr get-login --profile $aws_profile | cut -d ' ' -f 9 |  sed 's~http[s]*://~~g'
+}
+
+
+function full_repo_name {
+  local aws_profile=$1
+  echo ${aws_profile}-${repo_name}
+}
+
+
+import_config
+callback_args="${@:2}"
+
+case $1 in
+
+"--version")
+  nino_version $callback_args;;
+
+"help")
+  help_command $callback_args;;
+
+"login")
+  login_command $callback_args;;
+
+"repo:create")
+  repo_create_command $callback_args;;
+
+"repo:delete")
+  repo_delete_command $callback_args;;
+
+"repo:info")
+  repo_info_command $callback_args;;
+
+"repo:host")
+  repo_host_command $callback_args;;
+
+"repo:image")
+  repo_image_command $callback_args;;
+
+"build")
+  build_command $callback_args;;
+
+"tag:add")
+  tag_add_command $callback_args;;
+
+"tag:push")
+  tag_push_command $callback_args;;
+
+"tag")
+    tag_command $callback_args;;
+*)
+  help_command
+  exit 1;;
+esac
