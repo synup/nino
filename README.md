@@ -35,51 +35,34 @@ The config file is a bash script. So feel free to use anything bash-friendly.
 
 Most commands require the AWS profile name
 
-* Add tag to a build
-  ```
-  nino tag:add <aws-profile> <tag>
-  ```
+```
+# Add tag to a build
+nino tag:add <aws-profile> <tag>
 
-* Pushed tag
-  ```
-  nino tag:push <aws-profile> <tag>
-  ```
+# Pushed tag
+nino tag:push <aws-profile> <tag>
 
-* Both `tag:add` and `tag:push`
-  ```
-  nino tag <aws-profile> <tag>
-  ```
+# Both `tag:add` and `tag:push`
+nino tag <aws-profile> <tag>
 
-* Build image
-  ```
-  nino build <aws-profile>
-  ```
+# Build image
+nino build <aws-profile>
 
-* URL to the latest image in the repo
-  ```
-  nino repo:image <aws-profile>
-  ```
+# URL to the latest image in the repo
+nino repo:image <aws-profile>
 
-* AWS ECR repo info
-  ```
-  nino repo:info <aws-profile>
-  ```
+# AWS ECR repo info
+nino repo:info <aws-profile>
 
-* Create an ECR repository
-  ```
-  nino repo:create <aws-profile>
-  ```
+# Create an ECR repository
+nino repo:create <aws-profile>
 
-* Delete the ECR repository
-  ```
-  nino repo:delete <aws-profile>
-  ```
+# Delete the ECR repository
+nino repo:delete <aws-profile>
 
-* Display ECR repo host url
-  ```
-  nino repo:host
-  ```
-
+# Display ECR repo host url
+nino repo:host
+```
 
 ## Notes
 
