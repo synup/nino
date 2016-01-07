@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+
+import commands
+output = commands.getstatusoutput('nino footask')
+
+print output
