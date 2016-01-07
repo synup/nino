@@ -1,6 +1,22 @@
 #!/usr/bin/env python
 
-import commands
-output = commands.getstatusoutput('nino footask')
+import os
+from string import Template
 
-print output
+env_vars = dict(
+    project_name=os.environ["project_name"],
+    target_env=os.environ["target_env"],
+    target_name=os.environ["target_name"]
+)
+
+command_template_strings= [
+    "echo ${target_env}",
+    "echo ${project_name}",
+    "echo ${target_name}",
+    "echo ok"
+]
+
+for command_template_string in command_template_strings:
+    command_template = Template(command_template_string)
+    command = command_template.substitute(env_vars)
+    print(command)
