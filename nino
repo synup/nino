@@ -1,36 +1,132 @@
 #!/usr/bin/env bash
 
-nino_version="0.0.1"
-
 function import_config() {
-  local project_config_file="./.nino/config"
-  local global_config_file="$HOME/.ninorc"
+  local config_file="./.ninorc"
+  source $config_file
+}
 
-  if [ -f $global_config_file  ]; then
-    export $(cat $global_config_file)
-  fi
+function help_command() {
+  echo "
+  To use nino, add a .ninorc file to project directory with 'repo_name' set.
+    repo_name='hello-world'
 
-  export $(cat $project_config_file)
-  if [ -z "$target_env" ]; then
-    export target_env=$default_target_env
-  fi
-  export target_name="${target_env}-${project_name}"
+  AVAILABLE COMMANDS
+  -------------------
+
+  Both tag:add and tag:push
+    tag <aws-profile> <tag>
+
+  Add tag to a build
+    tag:add <aws-profile> <tag>
+
+  Pushed tag added
+    tag:push <aws-profile> <tag>
+
+  Build image
+    build <aws-profile>
+
+  URL to the latest image in the repo
+    repo:image <aws-profile>
+
+  AWS ECR repo info
+    repo:info <aws-profile>
+
+  Create an ECR repository
+    repo:create <aws-profile>
+
+  Delete the ECR repository
+    repo:delete <aws-profile>
+
+  Display ECR repo host url
+    repo:host
+  "
 }
 
 
-function help_command() {
+function login_command() {
+  eval $(aws ecr get-login)
+}
 
-  if [ -d .nino ]; then
-    for task_script in .nino/*; do
-      local task_name=$(basename $task_script)
-      if [ "$task_name" != "config" ]; then
-        echo $task_name
-      fi
-    done
-  else
-    echo "--no project config found--"
-  fi
 
+function nino_version() {
+  echo "0.0.1"
+}
+
+
+function build_command() {
+  local aws_profile=$1
+  eval $(docker-machine env default)
+  docker build -t $(full_repo_name $aws_profile) -f $dockerfile_path .
+}
+
+
+function tag_command() {
+  tag_add_command $1 $2
+  tag_push_command $1 $2
+}
+
+
+function tag_add_command() {
+  local aws_profile=$1
+  local tag_name=$2
+  local repo_host=$(repo_host_command $aws_profile)
+  local full_repo_name=$(full_repo_name $aws_profile)
+  eval $(docker-machine env default)
+
+  docker tag ${full_repo_name}:${tag_name} ${repo_host}/${full_repo_name}:${tag_name}
+}
+
+
+function tag_push_command() {
+  local aws_profile=$1
+  local tag_name=$2
+  local repo_host=$(repo_host_command $aws_profile)
+  local full_repo_name=$(full_repo_name $aws_profile)
+  eval $(docker-machine env default)
+
+  docker push ${repo_host}/${full_repo_name}:${tag_name}
+}
+
+function repo_create_command() {
+  local aws_profile=$1
+  local full_repo_name=$(full_repo_name $aws_profile)
+  aws ecr create-repository --repository-name $full_repo_name --profile $aws_profile
+}
+
+
+function repo_delete_command() {
+  local aws_profile=$1
+  local full_repo_name=$(full_repo_name $aws_profile)
+  aws ecr delete-repository --repository-name $full_repo_name --profile $aws_profile
+}
+
+
+function repo_info_command() {
+  local aws_profile=$1
+  local full_repo_name=$(full_repo_name $aws_profile)
+  aws ecr describe-repositories --repository-name $full_repo_name --profile $aws_profile
+}
+
+
+function repo_image_command() {
+  local aws_profile=$1
+  local tag_name="latest"
+  local repo_host=$(repo_host_command $aws_profile)
+  local full_repo_name=$(full_repo_name $aws_profile)
+
+  echo ${repo_host}/${full_repo_name}:${tag_name}
+}
+
+
+function repo_host_command() {
+  local aws_profile=$1
+  aws ecr get-login --profile $aws_profile | cut -d ' ' -f 9 |  sed 's~http[s]*://~~g'
+}
+
+
+function full_repo_name {
+  local aws_profile=$1
+  echo ${aws_profile}-${repo_name}
 }
 
 
@@ -45,8 +141,36 @@ case $1 in
 "help")
   help_command $callback_args;;
 
+"login")
+  login_command $callback_args;;
+
+"repo:create")
+  repo_create_command $callback_args;;
+
+"repo:delete")
+  repo_delete_command $callback_args;;
+
+"repo:info")
+  repo_info_command $callback_args;;
+
+"repo:host")
+  repo_host_command $callback_args;;
+
+"repo:image")
+  repo_image_command $callback_args;;
+
+"build")
+  build_command $callback_args;;
+
+"tag:add")
+  tag_add_command $callback_args;;
+
+"tag:push")
+  tag_push_command $callback_args;;
+
+"tag")
+    tag_command $callback_args;;
 *)
-  .nino/$1 $callback_args | while read task_step; do
-     eval $task_step
-   done;;
+  help_command
+  exit 1;;
 esac
